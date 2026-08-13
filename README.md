@@ -37,33 +37,20 @@ media-archive login --platform netease
 
 登录成功后 Cookie 自动保存，无需手动复制粘贴。
 
-**豆瓣没有官方二维码登录 API，需要用方式二或三。**
+**豆瓣没有官方二维码登录 API，需要手动复制 Cookie。**
 
-### 方式二：油猴脚本（豆瓣推荐）
+### 方式二：手动获取（豆瓣）
 
-安装配套 Tampermonkey 脚本：
-- 仓库路径：`tampermonkey/media-archive-cookie-extractor.user.js`
-
-使用步骤：
-1. 安装 [Tampermonkey 5.x+](https://chrome.google.com/webstore/detail/tampermonkey-beta/cgddlpjdbgkmabifnlfhgblgldjclmah)
-2. 打开豆瓣并登录
-3. 页面右侧会出现 Cookie 提取器浮窗
-4. 点击「复制 Cookie」→ 运行 `media-archive cred --platform douban` → 粘贴
-
-**为什么油猴脚本读不到 cookie？** 因为豆瓣的关键字段 `dbcl2` 是 HttpOnly 标记的，需要 Tampermonkey 5.x 的 `GM_cookie` API 才能读到。详见 [tampermonkey/README.md](tampermonkey/README.md)
-
-### 方式三：手动获取
-
-#### 豆瓣
 1. 浏览器登录 https://www.douban.com
 2. F12 → Network → 刷新页面 → 点击第一个请求
-3. 复制 `Cookie:` 行全部内容
+3. 复制 `Cookie:` 行全部内容（关键是 `dbcl2` 字段）
 
 ```bash
 media-archive cred --platform douban
 ```
 
 #### Bilibili / 网易云
+
 直接用方式一扫码登录，更简单。
 
 ## 使用
