@@ -4,6 +4,9 @@
 import json
 from pathlib import Path
 
+OUTPUT_DIR = Path.home() / ".media_archive"
+OUTPUT_DIR.mkdir(exist_ok=True)
+
 with open('/tmp/media_profile_final.json') as f:
     p = json.load(f)
 
