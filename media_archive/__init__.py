@@ -62,7 +62,7 @@ def crawl_douban_movies(cookie: str, limit: int = 0) -> list[dict]:
 
     all_items = []
     start = 0
-    page_size = 20
+    page_size = 50  # Douban API default is 20, use 50 to reduce requests
     session = requests.Session()
     session.headers.update({
         "User-Agent": "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 "
@@ -157,7 +157,7 @@ def get_bili_uid(cookie_str: str) -> str | None:
 
 
 def crawl_bilibili_bangumi(cookie_str: str, limit: int = 0) -> list[dict]:
-    """Crawl user's watched anime from Bilibili."""
+    """Crawl user's watched anime and drama (追番+追剧) from Bilibili."""
     uid = get_bili_uid(cookie_str)
     if not uid:
         return []
@@ -176,55 +176,61 @@ def crawl_bilibili_bangumi(cookie_str: str, limit: int = 0) -> list[dict]:
             k, v = part.split("=", 1)
             session.cookies.set(k.strip(), v.strip(), domain=".bilibili.com")
 
-    while True:
-        try:
-            r = session.get(
-                "https://api.bilibili.com/x/space/bangumi/follow/list",
-                params={"vmid": uid, "type": "1", "follow_status": "0", "pn": pn, "ps": "20"},
-                timeout=15,
-            )
-        except Exception as e:
-            print(f"[bilibili] Request error at page={pn}: {e}")
-            break
+    # Type 1 = anime (追番), Type 2 = drama (追剧)
+    for btype, type_name in [(1, "anime"), (2, "drama")]:
+        pn = 1
+        while True:
+            try:
+                r = session.get(
+                    "https://api.bilibili.com/x/space/bangumi/follow/list",
+                    params={"vmid": uid, "type": str(btype), "follow_status": "0", "pn": pn, "ps": "20"},
+                    timeout=15,
+                )
+            except Exception as e:
+                print(f"[bilibili] Request error ({type_name}) page={pn}: {e}")
+                break
 
-        if r.status_code != 200:
-            print(f"[bilibili] HTTP {r.status_code} at page={pn}")
-            break
+            if r.status_code != 200:
+                print(f"[bilibili] HTTP {r.status_code} ({type_name}) page={pn}")
+                break
 
-        data = r.json()
-        if data.get("code") != 0:
-            print(f"[bilibili] API error: {data.get('message')}")
-            break
+            data = r.json()
+            if data.get("code") != 0:
+                print(f"[bilibili] API error ({type_name}): {data.get('message')}")
+                break
 
-        items = data.get("data", {}).get("list", [])
-        if not items:
-            break
+            items = data.get("data", {}).get("list", [])
+            if not items:
+                break
 
-        for item in items:
-            season_id = item.get("season_id")
-            follow_status = item.get("follow_status", 0)
+            for item in items:
+                season_id = item.get("season_id")
+                follow_status = item.get("follow_status", 0)
+                # Status mapping: 1=追更中, 2=看过, 3=搁置
+                status_map = {1: "watching", 2: "watched", 3: "on_hold"}
+                status = status_map.get(follow_status, "watching")
 
-            all_items.append({
-                "title": item.get("title", ""),
-                "url": f"https://www.bilibili.com/bangumi/play/ss{season_id}",
-                "cover": item.get("cover", ""),
-                "subtitle": item.get("evaluate", ""),
-                "latest_episode": item.get("new_ep", {}).get("index_show", ""),
-                "follow_status": follow_status,
-                "platform": "bilibili",
-                "type": "anime",
-                "status": "watched" if follow_status == 2 else "watching",
-            })
+                all_items.append({
+                    "title": item.get("title", ""),
+                    "url": f"https://www.bilibili.com/bangumi/play/ss{season_id}",
+                    "cover": item.get("cover", ""),
+                    "subtitle": item.get("evaluate", ""),
+                    "latest_episode": item.get("new_ep", {}).get("index_show", ""),
+                    "follow_status": follow_status,
+                    "platform": "bilibili",
+                    "type": type_name,
+                    "status": status,
+                })
 
-        total = data.get("data", {}).get("total", 0)
-        pn += 1
-        time.sleep(1)
+            total = data.get("data", {}).get("total", 0)
+            pn += 1
+            time.sleep(1)
 
-        if len(all_items) >= total or len(items) < 20:
-            break
-        if limit and len(all_items) >= limit:
-            all_items = all_items[:limit]
-            break
+            if len(all_items) >= total or len(items) < 20:
+                break
+            if limit and len(all_items) >= limit:
+                all_items = all_items[:limit]
+                break
 
     return all_items
 
