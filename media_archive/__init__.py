@@ -55,19 +55,19 @@ def get_douban_user_id(cookie: str) -> str | None:
 
 
 def crawl_douban_movies(cookie: str, limit: int = 0) -> list[dict]:
-    """Crawl user's watched movies from douban using Frodo/Rexxar API."""
+    """Crawl user's watched movies from douban using web scraping (API is limited)."""
     uid = get_douban_user_id(cookie)
     if not uid:
         return []
 
     all_items = []
     start = 0
-    page_size = 50  # Douban API default is 20, use 50 to reduce requests
+    page_size = 15  # Web page shows 15 items per page
     session = requests.Session()
     session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 "
-                      "(KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36",
-        "Referer": "https://m.douban.com/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": f"https://movie.douban.com/people/{uid}/interests",
     })
     for part in cookie.split(';'):
         part = part.strip()
@@ -78,8 +78,8 @@ def crawl_douban_movies(cookie: str, limit: int = 0) -> list[dict]:
     while True:
         try:
             r = session.get(
-                f"https://m.douban.com/rexxar/api/v2/user/{uid}/interests",
-                params={"type": "movie", "status": "done", "start": start, "count": page_size},
+                f"https://movie.douban.com/people/{uid}/collect",
+                params={"start": start, "sort": "time", "rating": "all", "filter": "all", "mode": "grid"},
                 timeout=15,
             )
         except Exception as e:
@@ -87,60 +87,56 @@ def crawl_douban_movies(cookie: str, limit: int = 0) -> list[dict]:
             break
 
         if r.status_code != 200:
-            print(f"[douban] HTTP {r.status_code} at start={start}, resp={r.text[:200]}")
+            print(f"[douban] HTTP {r.status_code} at start={start}")
             break
 
-        try:
-            data = r.json()
-        except Exception as e:
-            print(f"[douban] JSON parse error: {e}")
-            break
-
-        items = data.get("interests", [])
+        soup = BeautifulSoup(r.text, 'html.parser')
+        items = soup.select('.item')
         if not items:
+            print(f"[douban] No items at start={start}")
             break
 
         for item in items:
-            # Frodo API fields
-            subject = item.get("subject", {})
-            title = subject.get("title", "") or item.get("title", "")
-            url = subject.get("url", "") or item.get("url", "")
-            cover_el = subject.get("cover", {}) or item.get("cover", {})
-            cover = cover_el.get("url", "") if isinstance(cover_el, dict) else ""
-            rating_el = subject.get("rating", {}) or item.get("rating", {})
-            avg_rating = rating_el.get("value", "") if isinstance(rating_el, dict) else ""
-            user_rating = rating_el.get("star_count", "") if isinstance(rating_el, dict) else ""
-            # star_count: 1-5 stars mapped to rating
-            date = item.get("create_time", "")
-            tags = []
-            for tag in (item.get("tags") or []):
-                if isinstance(tag, dict):
-                    tags.append(tag.get("name", ""))
-                else:
-                    tags.append(str(tag))
-            comment = item.get("comment", "")
-
+            title_el = item.select_one('.title a')
+            if not title_el:
+                continue
+            
+            title = title_el.get_text(strip=True)
+            url = title_el.get('href', '')
+            
+            # Extract rating
+            rating_el = item.select_one('.rating')
+            rating = rating_el.get_text(strip=True) if rating_el else ""
+            
+            # Extract date
+            date_el = item.select_one('.date')
+            date = date_el.get_text(strip=True) if date_el else ""
+            
+            # Extract cover (if available)
+            cover_el = item.select_one('.pic img')
+            cover = cover_el.get('src', '') if cover_el else ""
+            
             all_items.append({
                 "title": title,
-                "url": url,
+                "url": f"https://movie.douban.com{url}" if url.startswith('/') else url,
                 "cover": cover,
-                "rating": str(user_rating) if user_rating else "",
-                "avg_rating": avg_rating,
+                "rating": rating,
+                "avg_rating": "",
                 "date": date,
-                "tags": ",".join(tags),
-                "comment": comment,
+                "tags": "",
+                "comment": "",
                 "platform": "douban",
                 "type": "movie",
                 "status": "watched",
             })
 
         start += page_size
-        time.sleep(1.5)
+        time.sleep(1)
 
+        if len(items) < page_size:
+            break
         if limit and len(all_items) >= limit:
             all_items = all_items[:limit]
-            break
-        if len(items) < page_size:
             break
 
     return all_items
