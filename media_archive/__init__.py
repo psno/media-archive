@@ -356,11 +356,13 @@ def crawl_netease_liked(cookie_str: str, limit: int = 0) -> list[dict]:
     total_count = data.get("playlist", {}).get("trackCount", 0)
 
     for track in tracks:
+        ar = track.get("ar", [])
+        al = track.get("al", {})
         all_tracks.append({
             "title": track.get("name", ""),
-            "artists": "/".join(a.get("name", "") for a in track.get("artists", [])),
-            "album": track.get("album", {}).get("name", "") if track.get("album") else "",
-            "duration_ms": track.get("duration", 0),
+            "artists": "/".join(a.get("name", "") for a in ar if a.get("name")),
+            "album": al.get("name", "") if al else "",
+            "duration_ms": track.get("dt", 0),
             "url": f"https://music.163.com/#/song?id={track.get('id')}",
             "platform": "netease",
             "type": "song",
@@ -377,11 +379,13 @@ def crawl_netease_liked(cookie_str: str, limit: int = 0) -> list[dict]:
         if data2 and data2.get("code") == 200:
             more_tracks = data2.get("playlist", {}).get("tracks", [])
             for track in more_tracks:
+                ar = track.get("ar", [])
+                al = track.get("al", {})
                 all_tracks.append({
                     "title": track.get("name", ""),
-                    "artists": "/".join(a.get("name", "") for a in track.get("artists", [])),
-                    "album": track.get("album", {}).get("name", "") if track.get("album") else "",
-                    "duration_ms": track.get("duration", 0),
+                    "artists": "/".join(a.get("name", "") for a in ar if a.get("name")),
+                    "album": al.get("name", "") if al else "",
+                    "duration_ms": track.get("dt", 0),
                     "url": f"https://music.163.com/#/song?id={track.get('id')}",
                     "platform": "netease",
                     "type": "song",
@@ -430,10 +434,12 @@ def crawl_netease_playhistory(cookie_str: str, limit: int = 0) -> list[dict]:
 
         for record in all_data:
             song = record.get("song", {})
+            ar = song.get("ar", [])
+            al = song.get("al", {})
             all_records.append({
                 "title": song.get("name", ""),
-                "artists": "/".join(a.get("name", "") for a in song.get("artists", [])),
-                "album": song.get("album", {}).get("name", "") if song.get("album") else "",
+                "artists": "/".join(a.get("name", "") for a in ar if a.get("name")),
+                "album": al.get("name", "") if al else "",
                 "play_count": record.get("playCount", 0),
                 "score": record.get("score", 0),
                 "url": f"https://music.163.com/#/song?id={song.get('id')}",

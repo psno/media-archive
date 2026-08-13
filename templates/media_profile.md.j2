@@ -1,0 +1,89 @@
+---
+created: 2026-08-13
+tags:
+  - media
+  - profile
+  - preferences
+---
+
+# 媒体档案画像
+
+## 概览
+
+> 生成时间: {{generated_at}}
+> 总记录数: {{total_records}} 条
+
+| 平台 | 数量 |
+|------|------|
+| 🎬 豆瓣电影 | {{douban_movies}}部 |
+| 📺 B站番剧 | {{bilibili_anime}}部 |
+| 📺 B站剧集 | {{bilibili_drama}}部 |
+| 🎵 网易云喜欢 | {{netease_liked}}首 |
+| 🎧 网易云排行 | {{netease_history}}条 |
+
+---
+
+## 🎬 豆瓣电影偏好
+
+### 年份分布
+
+{{douban_year_distribution}}
+
+### 最近观看
+
+{{recent_movies}}
+
+---
+
+## 📺 B站追番/剧偏好
+
+### 状态分布
+
+{{bilibili_status_summary}}
+
+### 最近看过
+
+**番剧:**
+{{recent_anime}}
+
+**剧集:**
+{{recent_drama}}
+
+---
+
+## 🎵 网易云音乐偏好
+
+### 最常听歌手 (Top 20)
+
+{{top_artists}}
+
+### 最高频歌曲 (Top 20)
+
+{{top_songs}}
+
+### 音乐统计
+
+- 总歌曲数: {{netease_liked}}首
+- 音乐总时长: {{total_duration_hours}}小时
+- 常听歌手数: {{top_artists|length}}位
+
+---
+
+## 画像总结
+
+### 媒体消费特点
+
+1. **观影习惯**: {{douban_most_active_year}}年是观影最活跃年份，共观看 {{douban_most_active_count}}部
+2. **追番习惯**: 番剧完成率 {{anime_completion_rate}}%，剧集完成率 {{drama_completion_rate}}%
+3. **音乐偏好**: 最常听歌手是 {{top_artist}}，歌曲风格偏向 {{music_style_inference}}
+
+### 时间分布
+
+- 平均每月观影: ~{{avg_movies_per_month}}部
+- 平均每月追番: ~{{avg_anime_per_month}}部
+- 平均每周听歌: ~{{avg_songs_per_week}}首
+
+---
+
+*数据来源: media-archive 项目*
+*最后更新: {{generated_at}}*
