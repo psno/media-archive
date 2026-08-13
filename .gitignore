@@ -13,3 +13,4 @@ build/
 .mypy_cache/
 .ipynb_checkpoints/
 .DS_Store
+.playwright-cli/
