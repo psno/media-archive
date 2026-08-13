@@ -23,9 +23,26 @@ uv pip install -e .
 
 ## 配置凭证
 
-每个平台需要登录 Cookie。获取方式：
+每个平台需要登录 Cookie。推荐使用油猴脚本一键提取，或手动从浏览器获取。
 
-### 豆瓣
+### 方式一：油猴脚本（推荐）
+
+安装配套 Tampermonkey 脚本：
+- 仓库路径：`tampermonkey/media-archive-cookie-extractor.user.js`
+- 支持豆瓣、B站、网易云三个平台
+
+使用步骤：
+1. 安装 [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
+2. 打开目标网站并确保已登录
+3. 页面右侧会出现 Media Archive 浮窗，显示 Cookie 状态
+4. 点击「复制 Cookie」按钮
+5. 运行对应平台的 cred 命令并粘贴
+
+详细文档见：[tampermonkey/README.md](tampermonkey/README.md)
+
+### 方式二：手动获取
+
+#### 豆瓣
 1. 浏览器登录 https://www.douban.com
 2. F12 → Network → 刷新页面 → 点击第一个请求
 3. 复制 `Cookie:` 行全部内容
@@ -35,7 +52,7 @@ media-archive cred --platform douban
 # 粘贴 Cookie
 ```
 
-### Bilibili
+#### Bilibili
 1. 浏览器登录 https://www.bilibili.com
 2. F12 → Application → Cookies → `www.bilibili.com`
 3. 复制 `SESSDATA` 和 `bili_jct` 值，用分号拼接
@@ -44,7 +61,7 @@ media-archive cred --platform douban
 media-archive cred --platform bilibili
 ```
 
-### 网易云音乐
+#### 网易云音乐
 1. 浏览器登录 https://music.163.com
 2. F12 → Network → 复制 Cookie（需要包含 `MUSIC_U` 和 `__csrf`）
 
