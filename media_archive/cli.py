@@ -11,6 +11,7 @@ from media_archive import (
     save_to_db, export_json, export_csv, get_stats,
     DB_DIR, CRED_FILE,
 )
+from media_archive.qr_login import netease_qr_login, bilibili_qr_login, display_qr_in_terminal
 
 
 PLATFORMS = ["douban", "bilibili", "netease"]
@@ -69,7 +70,34 @@ def status(ctx):
 
 
 @cli.command()
-@click.option("--limit", default=0, help="Max records per platform (0 = all)")
+@click.option("--platform", required=True, type=click.Choice(["netease", "bilibili"]), help="Platform for QR login")
+@click.pass_context
+def login(ctx, platform):
+    """Login via QR code (Netease/Bilibili only)."""
+    click.echo(f"\n=== {platform} 二维码登录 ===\n")
+
+    if platform == "netease":
+        result = netease_qr_login(console_display_callback=display_qr_in_terminal)
+    elif platform == "bilibili":
+        result = bilibili_qr_login(console_display_callback=display_qr_in_terminal)
+    else:
+        click.echo("该平台不支持二维码登录，请使用 cred 命令手动配置")
+        return
+
+    if result["success"]:
+        save_cred(f"{platform}_cookie", result["cookie"])
+        click.echo(f"\n✓ 登录成功！")
+        if "nickname" in result:
+            click.echo(f"  用户: {result['nickname']}")
+        if "user_id" in result:
+            click.echo(f"  ID: {result['user_id']}")
+        click.echo(f"  Cookie 已保存到 {CRED_FILE}")
+    else:
+        click.echo(f"\n✗ 登录失败: {result['message']}")
+
+
+@cli.command()
+@click.option("--limit", default=0, help="Max records (0 = all)")
 @click.pass_context
 def fetch(ctx, limit):
     """Fetch data from all configured platforms."""

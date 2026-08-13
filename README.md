@@ -23,24 +23,36 @@ uv pip install -e .
 
 ## 配置凭证
 
-每个平台需要登录 Cookie。推荐使用油猴脚本一键提取，或手动从浏览器获取。
+每个平台需要登录 Cookie。推荐用以下方式：
 
-### 方式一：油猴脚本（推荐）
+### 方式一：CLI 二维码登录（推荐，Netease/Bilibili）
+
+```bash
+# B站 - 终端显示二维码，手机APP扫码
+media-archive login --platform bilibili
+
+# 网易云 - 终端显示二维码，手机APP扫码
+media-archive login --platform netease
+```
+
+登录成功后 Cookie 自动保存，无需手动复制粘贴。
+
+**豆瓣没有官方二维码登录 API，需要用方式二或三。**
+
+### 方式二：油猴脚本（豆瓣推荐）
 
 安装配套 Tampermonkey 脚本：
 - 仓库路径：`tampermonkey/media-archive-cookie-extractor.user.js`
-- 支持豆瓣、B站、网易云三个平台
 
 使用步骤：
-1. 安装 [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
-2. 打开目标网站并确保已登录
-3. 页面右侧会出现 Media Archive 浮窗，显示 Cookie 状态
-4. 点击「复制 Cookie」按钮
-5. 运行对应平台的 cred 命令并粘贴
+1. 安装 [Tampermonkey 5.x+](https://chrome.google.com/webstore/detail/tampermonkey-beta/cgddlpjdbgkmabifnlfhgblgldjclmah)
+2. 打开豆瓣并登录
+3. 页面右侧会出现 Cookie 提取器浮窗
+4. 点击「复制 Cookie」→ 运行 `media-archive cred --platform douban` → 粘贴
 
-详细文档见：[tampermonkey/README.md](tampermonkey/README.md)
+**为什么油猴脚本读不到 cookie？** 因为豆瓣的关键字段 `dbcl2` 是 HttpOnly 标记的，需要 Tampermonkey 5.x 的 `GM_cookie` API 才能读到。详见 [tampermonkey/README.md](tampermonkey/README.md)
 
-### 方式二：手动获取
+### 方式三：手动获取
 
 #### 豆瓣
 1. 浏览器登录 https://www.douban.com
@@ -49,25 +61,10 @@ uv pip install -e .
 
 ```bash
 media-archive cred --platform douban
-# 粘贴 Cookie
 ```
 
-#### Bilibili
-1. 浏览器登录 https://www.bilibili.com
-2. F12 → Application → Cookies → `www.bilibili.com`
-3. 复制 `SESSDATA` 和 `bili_jct` 值，用分号拼接
-
-```bash
-media-archive cred --platform bilibili
-```
-
-#### 网易云音乐
-1. 浏览器登录 https://music.163.com
-2. F12 → Network → 复制 Cookie（需要包含 `MUSIC_U` 和 `__csrf`）
-
-```bash
-media-archive cred --platform netease
-```
+#### Bilibili / 网易云
+直接用方式一扫码登录，更简单。
 
 ## 使用
 
