@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "media-archive"
+version = "0.1.0"
+description = "CLI tool to archive media data from Douban, Bilibili, and Netease Cloud Music"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.28",
+    "beautifulsoup4>=4.12",
+    "openpyxl>=3.1",
+    "click>=8.1",
+]
+
+[project.scripts]
+media-archive = "media_archive.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["media_archive"]
