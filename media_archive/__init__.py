@@ -179,6 +179,8 @@ def crawl_bilibili_bangumi(cookie_str: str, limit: int = 0) -> list[dict]:
     # Type 1 = anime (追番), Type 2 = drama (追剧)
     for btype, type_name in [(1, "anime"), (2, "drama")]:
         pn = 1
+        type_total = None
+        type_items = []
         while True:
             try:
                 r = session.get(
@@ -203,14 +205,17 @@ def crawl_bilibili_bangumi(cookie_str: str, limit: int = 0) -> list[dict]:
             if not items:
                 break
 
+            # Get total on first page
+            if type_total is None:
+                type_total = data.get("data", {}).get("total", 0)
+
             for item in items:
                 season_id = item.get("season_id")
                 follow_status = item.get("follow_status", 0)
-                # Status mapping: 1=追更中, 2=看过, 3=搁置
                 status_map = {1: "watching", 2: "watched", 3: "on_hold"}
                 status = status_map.get(follow_status, "watching")
 
-                all_items.append({
+                type_items.append({
                     "title": item.get("title", ""),
                     "url": f"https://www.bilibili.com/bangumi/play/ss{season_id}",
                     "cover": item.get("cover", ""),
@@ -222,15 +227,17 @@ def crawl_bilibili_bangumi(cookie_str: str, limit: int = 0) -> list[dict]:
                     "status": status,
                 })
 
-            total = data.get("data", {}).get("total", 0)
             pn += 1
             time.sleep(1)
 
-            if len(all_items) >= total or len(items) < 20:
+            # Check if we've fetched all items for this type
+            if len(type_items) >= type_total or len(items) < 20:
                 break
-            if limit and len(all_items) >= limit:
-                all_items = all_items[:limit]
+            if limit and len(all_items) + len(type_items) >= limit:
+                type_items = type_items[:limit - len(all_items)]
                 break
+
+        all_items.extend(type_items)
 
     return all_items
 
