@@ -74,7 +74,12 @@ def crawl_douban_movies(cookie: str, limit: int = 0) -> list[dict]:
     start = 0
     session = requests.Session()
     session.headers.update(DOUBAN_HEADERS)
-    session.cookies.set_string(cookie)
+    # Parse cookie string and add to session
+    for part in cookie.split(';'):
+        part = part.strip()
+        if '=' in part:
+            k, v = part.split('=', 1)
+            session.cookies.set(k.strip(), v.strip(), domain='.douban.com')
 
     while True:
         try:
@@ -170,7 +175,11 @@ def crawl_bilibili_bangumi(cookie_str: str, limit: int = 0) -> list[dict]:
     pn = 1
     session = requests.Session()
     session.headers.update(BILI_HEADERS)
-    session.cookies.set_string(cookie_str)
+    for part in cookie_str.split(';'):
+        part = part.strip()
+        if '=' in part:
+            k, v = part.split('=', 1)
+            session.cookies.set(k.strip(), v.strip(), domain='.bilibili.com')
 
     while True:
         try:
@@ -214,7 +223,7 @@ def crawl_bilibili_bangumi(cookie_str: str, limit: int = 0) -> list[dict]:
                 "follow_status": follow_status,
                 "platform": "bilibili",
                 "type": "anime",
-                "status": "watched" if follow_status == "2" else "watching",
+                "status": "watched" if follow_status == 2 else "watching",
             })
 
         total = data.get("data", {}).get("total", 0)
@@ -283,7 +292,11 @@ def crawl_netease_liked(cookie_str: str, limit: int = 0) -> list[dict]:
 
     session = requests.Session()
     session.headers.update(NETEASE_HEADERS)
-    session.cookies.set_string(cookie_str)
+    for part in cookie_str.split(';'):
+        part = part.strip()
+        if '=' in part:
+            k, v = part.split('=', 1)
+            session.cookies.set(k.strip(), v.strip(), domain='.music.163.com')
 
     # Get user playlists to find the 'I like' playlist
     resp = _netease_post(session,
@@ -371,7 +384,11 @@ def crawl_netease_playhistory(cookie_str: str, limit: int = 0) -> list[dict]:
 
     session = requests.Session()
     session.headers.update(NETEASE_HEADERS)
-    session.cookies.set_string(cookie_str)
+    for part in cookie_str.split(';'):
+        part = part.strip()
+        if '=' in part:
+            k, v = part.split('=', 1)
+            session.cookies.set(k.strip(), v.strip(), domain='.music.163.com')
 
     while True:
         post_data = {
